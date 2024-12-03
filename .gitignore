@@ -1,0 +1,6 @@
+"# R project gitignore" 
+".Rproj.user" 
+".Rhistory" 
+".RData" 
+".Ruserdata" 
+"*.Rproj" 

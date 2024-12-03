@@ -1,0 +1,254 @@
+\documentclass{beamer}\usepackage[]{graphicx}\usepackage[]{xcolor}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlsng}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hldef}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usetheme{Madrid}
+
+% Adjust margins globally
+\setbeamersize{text margin left=5mm, text margin right=5mm}
+
+% Include logo in title page
+\title[Travelers University Modeling Competition]{2024 Travelers University Modeling Competition: \\ CloverShield Insurance Company Modeling Problem}
+\subtitle{LightGBM Modeling Approach}
+\author[O.F. Fasanya and A.K. Adjei]{Oluwafunmibi Omotayo Fasanya, Augustine Kena Adjei}
+\date{December 5, 2024}
+% Add logo
+\titlegraphic{\includegraphics[width=3cm]{nebraska-n.jpg}}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+\frame{\titlepage}
+
+% Section: Introduction
+\section{Introduction}
+
+\begin{frame}{Problem Statement}
+\textbf{Objective:}
+\begin{itemize}
+    \item Develop a predictive model to forecast policyholder call frequency (\textit{call\_counts}) for CloverShield Insurance, based on customer and policy data.
+\end{itemize}
+
+\textbf{Goal:}
+\begin{itemize}
+    \item Reduce call center costs by optimizing resource allocation and improving efficiency through customer segmentation.
+\end{itemize}
+\end{frame}
+
+% Section: Variable Selection
+\section{Variable Selection}
+
+\begin{frame}{Variable Selection Process}
+\textbf{Handling Missing Values:}
+\begin{itemize}
+    \item Identified variables with high percentages of missing values and flagged them for imputation.
+    \item Created missing value indicator variables to capture potential predictive information from missingness (e.g., customers without telematics data may have unique behaviors).
+    \item Imputation techniques:
+    \begin{itemize}
+        \item \textbf{Continuous variables:} Replaced missing values with the median, which is robust to outliers.
+        \item \textbf{Categorical variables:} Replaced missing values with the mode, representing the most likely category.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Variable Selection Process}
+\textbf{Correlation Analysis:}
+\begin{itemize}
+    \item Evaluated relationships with the target variable (\textit{call\_counts}):
+    \begin{itemize}
+        \item \textbf{Continuous variables:} Pearson correlation coefficient.
+        \item \textbf{Categorical variables:} Point-Biserial Correlation to assess the relationship between binary predictors and           \textit{call\_counts}.
+    \end{itemize}
+    
+    \item \textit{X12m\_call\_history} showed the highest correlation (0.28) with \textit{call\_counts} among continuous variables.
+    \item Others variables has a very low association (less than 0.1) with call count.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Variable Selection Process}
+\textbf{Categorical Encoding:}
+\begin{itemize}
+    \item Transformed categorical variables using one-hot encoding (dummy variables) to ensure compatibility with LightGBM.
+\end{itemize}
+
+\textbf{Multicollinearity Check:}
+\begin{itemize}
+    \item Examined correlation matrix for continuous variables to identify and address any strong correlations among predictors.
+\end{itemize}
+\end{frame}
+
+
+% Section: Methods Considered
+\section{Methods Considered}
+
+\begin{frame}{Methods Considered}
+\textbf{Tree-Based Models:}
+\begin{itemize}
+    \item \textbf{Random Forest:} Captures non-linear relationships and interactions robustly.
+    \item \textbf{XGBoost:} Effective gradient boosting algorithm for structured data.
+    \item \textbf{LightGBM:} Efficient histogram-based decision tree with lower memory consumption.
+\end{itemize}
+
+\textbf{Zero-Inflated Models:}
+\begin{itemize}
+    \item \textbf{Zero-Inflated Poisson (ZIP):} Addresses excess zeros in count data.
+    \item \textbf{Zero-Inflated Negative Binomial (ZINB):} Handles overdispersion and excess zeros.
+    \item \textbf{Hurdle Model:} A two-part model designed to separately handle the zero and non-zero counts
+\end{itemize}
+\end{frame}
+
+% Section: Chosen Method
+\section{Chosen Method}
+
+% Slide 1: Introduction to LightGBM
+\begin{frame}{Chosen Method: LightGBM (1/2)}
+\textbf{Overview of LightGBM:}
+\begin{itemize}
+    \item LightGBM is a gradient-boosting framework that integrates decision trees (weak learners) sequentially using boosting.
+    \item Unlike traditional methods, it grows trees leaf-wise:
+    \begin{itemize}
+        \item Selects the leaf with the maximum delta loss to grow, minimizing training loss efficiently.
+    \end{itemize}
+    \item Shares key advantages with XGBoost:
+    \begin{itemize}
+        \item Regularization, sparse optimization, bagging, parallel training, and early stopping.
+        \item Flexibility to handle multiple loss functions, including Poisson for count data.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+% Slide 2: Advanced Features and Results
+\begin{frame}{Chosen Method: LightGBM (2/2)}
+\textbf{Why LightGBM?}
+\begin{itemize}
+    \item Designed for high-speed computation and low memory usage.
+    \item Handles large datasets and categorical variables effectively.
+\end{itemize}
+
+\textbf{Advanced Techniques:}
+\begin{itemize}
+    \item \textbf{Leaf-wise growth:} Focuses on growing deeper trees in areas requiring finer granularity for better accuracy.
+    \item \textbf{GOSS (Gradient-based One-Side Sampling):} Accelerates training by prioritizing instances with larger gradient values.
+    \item \textbf{Automatic binning:} Reduces memory consumption and improves efficiency by binning continuous features.
+\end{itemize}
+
+\end{frame}
+
+% Section: Model Evaluation
+\section{Model Evaluation}
+
+\begin{frame}{Model Evaluation}
+\textbf{Metrics:}
+\begin{itemize}
+    \item RMSE, MAE: Measure prediction accuracy.
+    \item Poisson log-likelihood: Validates count data assumptions.
+    \item R-squared: Goodness-of-fit.
+\end{itemize}
+
+\textbf{Validation Approach:}
+\begin{itemize}
+    \item Train-test split (80-20).
+    \item Early stopping to avoid overfitting.
+\end{itemize}
+
+\textbf{Feature Importance:}
+\begin{itemize}
+    \item LightGBM's feature importance analysis to identify influential predictors.
+\end{itemize}
+\end{frame}
+
+% Slide: Additional Variables
+\begin{frame}{Potentially Useful Variables (Not in the Dataset)}
+\textbf{Demographic Factors:}
+\begin{itemize}
+    \item Education level, marital status, employment status.
+    \item Local economic conditions.
+\end{itemize}
+
+\textbf{Customer Behavioral Indicators:}
+\begin{itemize}
+    \item Payment history and risk profile.
+    \item Duration of loyalty with the company.
+    \item Frequency of customer service interactions.
+\end{itemize}
+
+\textbf{Policy and Service Features:}
+\begin{itemize}
+    \item Insurance add-ons or optional coverages.
+    \item Payment frequency (e.g., monthly or annually).
+\end{itemize}
+
+\textbf{Geographical and Economic Indicators:}
+\begin{itemize}
+    \item Policyholder location.
+    \item Regional economic trends.
+\end{itemize}
+\end{frame}
+
+
+% Section: Conclusion
+\section{Conclusion}
+
+\begin{frame}{Conclusion}
+\textbf{Summary:}
+\begin{itemize}
+    \item LightGBM was selected for its efficiency, accuracy, and suitability for count data.
+    \item Key predictors such as \textit{X12m\_call\_history} and behavioral factors were instrumental in explaining \textit{call\_counts}.
+    \item Model evaluation metrics confirmed the robustness of the approach.
+\end{itemize}
+
+\textbf{Future Work:}
+\begin{itemize}
+    \item Explore hyperparameter optimization (e.g., grid search).
+    \item Incorporate external features (e.g., market trends).
+\end{itemize}
+\end{frame}
+
+\end{document}
