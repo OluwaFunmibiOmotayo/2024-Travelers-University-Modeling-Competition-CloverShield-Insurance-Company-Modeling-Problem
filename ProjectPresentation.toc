@@ -1,0 +1,6 @@
+\beamer@sectionintoc {1}{Introduction}{2}{0}{1}
+\beamer@sectionintoc {2}{Variable Selection}{4}{0}{2}
+\beamer@sectionintoc {3}{Methods Considered}{8}{0}{3}
+\beamer@sectionintoc {4}{Chosen Method}{9}{0}{4}
+\beamer@sectionintoc {5}{Model Evaluation}{13}{0}{5}
+\beamer@sectionintoc {6}{Conclusion}{18}{0}{6}
